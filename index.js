@@ -9,10 +9,15 @@ addEventListener("fetch", (event) => {
  * @param {Request} request
  */
 async function handleRequest(request) {
+  const init = {
+    headers: {
+      "content-type": "text/html;charset=UTF-8",
+    },
+  };
   const json = await fetchResponse(BASE_URL);
   const variant = getVariantURL(json);
   const html = await fetchResponse(variant);
-  return new Response(html);
+  return new Response(html, init);
 }
 
 /**
