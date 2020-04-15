@@ -1,5 +1,6 @@
 # References
 
+- https://www.youtube.com/watch?v=nsQdRnmvCmI
 - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify
 - https://dev.to/shoupn/javascript-fetch-api-and-using-asyncawait-47mp
 - https://en.wikipedia.org/wiki/A/B_testing
