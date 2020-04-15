@@ -10,12 +10,24 @@ addEventListener("fetch", (event) => {
 });
 
 /**
- * Responds the JSON string
+ * Responds to the request
  * @param {Request} request
  */
 async function handleRequest(request) {
   const json = await getResponseJSON();
-  return new Response(JSON.stringify(json));
+  const route = chooseRoute(json);
+  return new Response(route);
+}
+
+/**
+ * Chooses random route from JSON
+ * @param {any} json
+ */
+function chooseRoute(json) {
+  const variants = json.variants;
+  const rand = getRandom(0, variants.length);
+  const route = variants[rand];
+  return route;
 }
 
 /**
@@ -28,7 +40,10 @@ async function getResponseJSON() {
 }
 
 /**
- * Get a random number from 0..upper
- * @param {number} upper - upper limit
+ * Returns a random number from lower..upper
+ * @param {number} lower - lower limit, inclusive
+ * @param {number} upper - upper limit, exclusive
  */
-function getRandom(upper) {}
+function getRandom(lower, upper) {
+  return Math.floor(Math.random() * (upper - lower) + lower);
+}
