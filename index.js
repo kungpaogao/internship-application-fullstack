@@ -1,9 +1,4 @@
 const BASE_URL = "https://cfw-takehome.developers.workers.dev/api/variants";
-const init = {
-  headers: {
-    "content-type": "application/json",
-  },
-};
 
 addEventListener("fetch", (event) => {
   event.respondWith(handleRequest(event.request));
@@ -14,29 +9,50 @@ addEventListener("fetch", (event) => {
  * @param {Request} request
  */
 async function handleRequest(request) {
-  const json = await getResponseJSON();
-  const route = chooseRoute(json);
-  return new Response(route);
+  const json = await fetchResponse(BASE_URL);
+  const variant = getVariantURL(json);
+  const html = await fetchResponse(variant);
+  return new Response(html);
 }
 
 /**
- * Chooses random route from JSON
+ * Gets random route from JSON
  * @param {any} json
  */
-function chooseRoute(json) {
+function getVariantURL(json) {
   const variants = json.variants;
   const rand = getRandom(0, variants.length);
-  const route = variants[rand];
-  return route;
+  const url = variants[rand];
+  return url;
 }
 
 /**
- * Gets response JSON from `BASE_URL`
+ * Gets response body from `url`
+ * @param {string} url - url to fetch
  */
-async function getResponseJSON() {
-  const response = await fetch(BASE_URL);
-  const json = await response.json();
-  return json;
+async function fetchResponse(url) {
+  const response = await fetch(url);
+  const result = await gatherResponse(response);
+  return result;
+}
+
+/**
+ * gatherResponse awaits and returns a response body as a string.
+ * Use await gatherResponse(..) in an async function to get the response body
+ * @param {Response} response
+ */
+async function gatherResponse(response) {
+  const { headers } = response;
+  const contentType = headers.get("content-type");
+  if (contentType.includes("application/json")) {
+    return await response.json();
+  } else if (contentType.includes("application/text")) {
+    return await response.text();
+  } else if (contentType.includes("text/html")) {
+    return await response.text();
+  } else {
+    return await response.text();
+  }
 }
 
 /**
