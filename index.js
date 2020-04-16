@@ -1,15 +1,31 @@
 const BASE_URL = "https://cfw-takehome.developers.workers.dev/api/variants";
 
 class ElementHandler {
-  constructor(attributeName, content) {
+  /**
+   * Constructs an ElementHandler
+   * @param {string} attributeName - name of the attribute to edit
+   * @param {string} content - new content
+   * @param {string} oldContent - old content to replace (optional)
+   */
+  constructor(attributeName, content, oldContent) {
     this.attributeName = attributeName;
     this.content = content;
+    this.oldContent = oldContent;
   }
 
+  /**
+   * If attribute exists on the element, set its content (use replace if
+   * `oldContent` is provided).
+   * Otherwise, just set the inner content of the element to `content`.
+   * @param {Element} element
+   */
   element(element) {
     const attribute = element.getAttribute(this.attributeName);
     if (attribute) {
-      element.setAttribute(this.attributeName, this.content);
+      const newContent = this.oldContent
+        ? attribute.replace(this.oldContent, this.content)
+        : this.content;
+      element.setAttribute(this.attributeName, newContent);
     } else {
       element.setInnerContent(this.content);
     }
@@ -31,10 +47,17 @@ async function handleRequest(request) {
     },
   };
   const json = await fetchResponse(BASE_URL);
-  const variant = getVariantURL(json);
-  const resp = await fetch(variant);
+  const { rand, url } = getVariantInfo(json);
+  const resp = await fetch(url);
   return new HTMLRewriter()
-    .on("title", new ElementHandler("", "New Title"))
+    .on("title", new ElementHandler("", "Andrew Gao - Cloudflare"))
+    .on("h1#title", new ElementHandler("", `Andrew Gao (${rand + 1})`))
+    .on(
+      "p#description",
+      new ElementHandler("", "I'm a computer science major at Cornell :)")
+    )
+    .on("a#url", new ElementHandler("", "Go to my website"))
+    .on("a#url", new ElementHandler("href", "https://www.andrewgao.org/"))
     .transform(resp);
 }
 
@@ -42,11 +65,11 @@ async function handleRequest(request) {
  * Gets random route from JSON
  * @param {any} json
  */
-function getVariantURL(json) {
+function getVariantInfo(json) {
   const variants = json.variants;
   const rand = getRandom(0, variants.length);
   const url = variants[rand];
-  return url;
+  return { rand, url };
 }
 
 /**
