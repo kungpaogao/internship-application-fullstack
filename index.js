@@ -1,5 +1,8 @@
 const BASE_URL = "https://cfw-takehome.developers.workers.dev/api/variants";
 
+/**
+ * Class for replacing elements and attributes
+ */
 class ElementHandler {
   /**
    * Constructs an ElementHandler
@@ -32,6 +35,17 @@ class ElementHandler {
   }
 }
 
+const rewriter = (rand) =>
+  new HTMLRewriter()
+    .on("title", new ElementHandler("", "Andrew Gao - Cloudflare"))
+    .on("h1#title", new ElementHandler("", `Andrew Gao (${rand + 1})`))
+    .on(
+      "p#description",
+      new ElementHandler("", "I'm a computer science major at Cornell :)")
+    )
+    .on("a#url", new ElementHandler("", "Go to my website"))
+    .on("a#url", new ElementHandler("href", "https://www.andrewgao.org/"));
+
 addEventListener("fetch", (event) => {
   event.respondWith(handleRequest(event.request));
 });
@@ -41,24 +55,10 @@ addEventListener("fetch", (event) => {
  * @param {Request} request
  */
 async function handleRequest(request) {
-  const init = {
-    headers: {
-      "content-type": "text/html;charset=UTF-8",
-    },
-  };
   const json = await fetchResponse(BASE_URL);
   const { rand, url } = getVariantInfo(json);
   const resp = await fetch(url);
-  return new HTMLRewriter()
-    .on("title", new ElementHandler("", "Andrew Gao - Cloudflare"))
-    .on("h1#title", new ElementHandler("", `Andrew Gao (${rand + 1})`))
-    .on(
-      "p#description",
-      new ElementHandler("", "I'm a computer science major at Cornell :)")
-    )
-    .on("a#url", new ElementHandler("", "Go to my website"))
-    .on("a#url", new ElementHandler("href", "https://www.andrewgao.org/"))
-    .transform(resp);
+  return rewriter(rand).transform(resp);
 }
 
 /**
