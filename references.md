@@ -8,3 +8,5 @@
 - https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
 - https://developers.cloudflare.com/workers/templates/pages/fetch_html/
 - https://developers.cloudflare.com/workers/templates/pages/fetch_json/
+- https://developers.cloudflare.com/workers/templates/pages/rewrite_links_html/
+- https://developers.cloudflare.com/workers/reference/apis/html-rewriter/
