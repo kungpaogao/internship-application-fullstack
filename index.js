@@ -1,5 +1,21 @@
 const BASE_URL = "https://cfw-takehome.developers.workers.dev/api/variants";
 
+class ElementHandler {
+  constructor(attributeName, content) {
+    this.attributeName = attributeName;
+    this.content = content;
+  }
+
+  element(element) {
+    const attribute = element.getAttribute(this.attributeName);
+    if (attribute) {
+      element.setAttribute(this.attributeName, this.content);
+    } else {
+      element.setInnerContent(this.content);
+    }
+  }
+}
+
 addEventListener("fetch", (event) => {
   event.respondWith(handleRequest(event.request));
 });
@@ -16,8 +32,10 @@ async function handleRequest(request) {
   };
   const json = await fetchResponse(BASE_URL);
   const variant = getVariantURL(json);
-  const html = await fetchResponse(variant);
-  return new Response(html, init);
+  const resp = await fetch(variant);
+  return new HTMLRewriter()
+    .on("title", new ElementHandler("", "New Title"))
+    .transform(resp);
 }
 
 /**
