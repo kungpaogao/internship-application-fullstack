@@ -35,10 +35,10 @@ class ElementHandler {
   }
 }
 
-const rewriter = (rand) =>
+const rewriter = (num) =>
   new HTMLRewriter()
     .on("title", new ElementHandler("", "Andrew Gao - Cloudflare"))
-    .on("h1#title", new ElementHandler("", `Andrew Gao (${rand + 1})`))
+    .on("h1#title", new ElementHandler("", `Andrew Gao (${num + 1})`))
     .on(
       "p#description",
       new ElementHandler("", "I'm a computer science major at Cornell :)")
@@ -55,10 +55,15 @@ addEventListener("fetch", (event) => {
  * @param {Request} request
  */
 async function handleRequest(request) {
+  const init = {
+    headers: {
+      "content-type": "text/html;charset=UTF-8",
+    },
+  };
   const json = await fetchResponse(BASE_URL);
-  const { rand, url } = getVariantInfo(json);
-  const resp = await fetch(url);
-  return rewriter(rand).transform(resp);
+  const { num, url } = getVariantInfo(json);
+  const html = await fetch(url);
+  return new Response(rewriter(num).transform(html).body, init);
 }
 
 /**
@@ -69,7 +74,7 @@ function getVariantInfo(json) {
   const variants = json.variants;
   const rand = getRandom(0, variants.length);
   const url = variants[rand];
-  return { rand, url };
+  return { num: rand, url };
 }
 
 /**
