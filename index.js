@@ -25,11 +25,13 @@ class ElementHandler {
   element(element) {
     const attribute = element.getAttribute(this.attributeName);
     if (attribute) {
+      // editing an attribute
       const newContent = this.oldContent
         ? attribute.replace(this.oldContent, this.content)
         : this.content;
       element.setAttribute(this.attributeName, newContent);
     } else {
+      // no attribute provided/found, so edit inner content
       element.setInnerContent(this.content);
     }
   }
@@ -55,15 +57,43 @@ addEventListener("fetch", (event) => {
  * @param {Request} request
  */
 async function handleRequest(request) {
+  // initial fetch for endpoints
+  const json = await fetchResponse(BASE_URL);
+
+  // default response
+  let response = new Response("Default response");
+
+  // get cookies
+  const cookie = request.headers.get("cookie");
+
+  if (cookie && cookie.includes("variant=0")) {
+    // has cookie for variant 0
+    response = getRewriteHTML(await fetch(json.variants[0]), 0);
+  } else if (cookie && cookie.includes("variant=1")) {
+    // has cookie for variant 1
+    response = getRewriteHTML(await fetch(json.variants[1]), 1);
+  } else {
+    // no cookie, get random variant, set cookies
+    const { num, url } = getVariantInfo(json);
+    response = getRewriteHTML(await fetch(url), num);
+    response.headers.append("Set-Cookie", `variant=${num}`);
+  }
+
+  return response;
+}
+
+/**
+ * Gets the HTML response with correct headers and rewritten data
+ * @param {Response} resp
+ * @param {number} variant - variant number for replacing text
+ */
+function getRewriteHTML(resp, variant) {
   const init = {
     headers: {
       "content-type": "text/html;charset=UTF-8",
     },
   };
-  const json = await fetchResponse(BASE_URL);
-  const { num, url } = getVariantInfo(json);
-  const html = await fetch(url);
-  return new Response(rewriter(num).transform(html).body, init);
+  return new Response(rewriter(variant).transform(resp).body, init);
 }
 
 /**
@@ -88,6 +118,9 @@ async function fetchResponse(url) {
 }
 
 /**
+ * Source:
+ * https://developers.cloudflare.com/workers/templates/pages/fetch_html/
+ *
  * gatherResponse awaits and returns a response body as a string.
  * Use await gatherResponse(..) in an async function to get the response body
  * @param {Response} response
